@@ -446,6 +446,7 @@ export default function App() {
   const [userAnswers, setUserAnswers] = useState<number[]>([]); // indexes of chosen options
   const [score, setScore] = useState(0);
   const [studentName, setStudentName] = useState("");
+  const [isVerifyingAnswer, setIsVerifyingAnswer] = useState(false);
 
   // Start case generation (API or Fallback)
   const handleSelectTheme = async (theme: ThemeInfo, forceFallback = false) => {
@@ -515,18 +516,71 @@ export default function App() {
     setSelectedAnswerIdx(idx);
   };
 
-  const handleSubmitAnswer = () => {
-    if (selectedAnswerIdx === null || isQuestionAnswered || !clinicalCase) return;
+  const handleSubmitAnswer = async () => {
+    if (selectedAnswerIdx === null || isQuestionAnswered || !clinicalCase || isVerifyingAnswer) return;
 
-    const currentQuestion = clinicalCase.questions[currentQuestionIdx];
-    const isCorrect = selectedAnswerIdx === currentQuestion.correctIndex;
-    
-    if (isCorrect) {
-      setScore(prev => prev + 1);
+    setIsVerifyingAnswer(true);
+
+    try {
+      const response = await fetch("/api/verify-answer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clinicalCase,
+          questionIndex: currentQuestionIdx,
+          selectedAnswerIdx,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const { isCorrect, actualCorrectIndex, feedbackExplanation } = result;
+
+        // Dynamically update the case with the verified correct index and explanations
+        setClinicalCase(prev => {
+          if (!prev) return prev;
+          const updatedQuestions = [...prev.questions];
+          const currentQ = updatedQuestions[currentQuestionIdx];
+          
+          updatedQuestions[currentQuestionIdx] = {
+            ...currentQ,
+            correctIndex: actualCorrectIndex,
+            correctExplanation: isCorrect ? feedbackExplanation : currentQ.correctExplanation,
+            incorrectExplanation: !isCorrect ? feedbackExplanation : currentQ.incorrectExplanation
+          };
+          return {
+            ...prev,
+            questions: updatedQuestions
+          };
+        });
+
+        // Set score based on real-time AI verification
+        if (isCorrect) {
+          setScore(prev => prev + 1);
+        }
+      } else {
+        // Fallback to standard validation
+        const currentQuestion = clinicalCase.questions[currentQuestionIdx];
+        const isCorrect = selectedAnswerIdx === currentQuestion.correctIndex;
+        if (isCorrect) {
+          setScore(prev => prev + 1);
+        }
+      }
+    } catch (err) {
+      console.error("Error calling verify API:", err);
+      // Fallback to standard validation
+      const currentQuestion = clinicalCase.questions[currentQuestionIdx];
+      const isCorrect = selectedAnswerIdx === currentQuestion.correctIndex;
+      if (isCorrect) {
+        setScore(prev => prev + 1);
+      }
+    } finally {
+      setUserAnswers(prev => [...prev, selectedAnswerIdx]);
+      setIsQuestionAnswered(true);
+      setIsVerifyingAnswer(false);
     }
-
-    setUserAnswers(prev => [...prev, selectedAnswerIdx]);
-    setIsQuestionAnswered(true);
   };
 
   const handleNextQuestion = () => {
@@ -1139,7 +1193,7 @@ export default function App() {
                         <button
                           key={idx}
                           onClick={() => handleSelectOption(idx)}
-                          disabled={isQuestionAnswered}
+                          disabled={isQuestionAnswered || isVerifyingAnswer}
                           className={`p-4 text-left border-2 rounded-xl transition-all flex items-start gap-3 text-xs leading-relaxed ${cardStyle}`}
                         >
                           <span className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 ${indicatorStyle}`}>
@@ -1218,17 +1272,30 @@ export default function App() {
                 {/* Submitting Actions */}
                 <div className="flex items-center justify-end border-t border-slate-100 pt-5 mt-6">
                   {!isQuestionAnswered ? (
-                    <button
-                      onClick={handleSubmitAnswer}
-                      disabled={selectedAnswerIdx === null}
-                      className={`px-5 py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
-                        selectedAnswerIdx !== null 
-                          ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
-                          : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
-                      }`}
-                    >
-                      Confirmar Selección
-                    </button>
+                    isVerifyingAnswer ? (
+                      <button
+                        disabled={true}
+                        className="px-5 py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center gap-2 cursor-wait shadow-none"
+                      >
+                        <svg className="animate-spin h-3.5 w-3.5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Verificando con Tutor IA...
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSubmitAnswer}
+                        disabled={selectedAnswerIdx === null}
+                        className={`px-5 py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
+                          selectedAnswerIdx !== null 
+                            ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+                            : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
+                        }`}
+                      >
+                        Confirmar Selección
+                      </button>
+                    )
                   ) : (
                     <button
                       onClick={handleNextQuestion}

@@ -12,6 +12,31 @@ const PORT = 3000;
 
 app.use(express.json());
 
+// Array of models prioritized dynamically based on recent success/failure to prevent persistent 429 quota/503 load issues
+let modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+
+function markModelAsSuccessful(modelName: string) {
+  const index = modelsToTry.indexOf(modelName);
+  if (index > 0) {
+    // Move the successful model to the front so subsequent requests bypass rate limits or busy models instantly
+    modelsToTry.splice(index, 1);
+    modelsToTry.unshift(modelName);
+    console.log(`[CARRIER] Route ${modelName} active. Sequence:`, modelsToTry);
+  }
+}
+
+function markModelAsFailed(modelName: string) {
+  const index = modelsToTry.indexOf(modelName);
+  if (index !== -1 && modelsToTry.length > 1) {
+    // Move the failed model to the end of the array so subsequent requests don't waste time on it
+    if (index < modelsToTry.length - 1) {
+      modelsToTry.splice(index, 1);
+      modelsToTry.push(modelName);
+      console.log(`[CARRIER] Route ${modelName} standby. Sequence:`, modelsToTry);
+    }
+  }
+}
+
 // API Endpoints
 app.post("/api/generate-case", async (req, res) => {
   const { theme, customPrompt } = req.body;
@@ -73,12 +98,13 @@ Pautas para la generación:
 El alumno ha indicado que quiere repasar y enfocar la simulación específicamente en este subtema o concepto molecular de la bioquímica: "${customPrompt ? customPrompt : 'Aspectos fisiológicos y metabólicos generales del bloque'}".
 Modula el caso clínico, la definición de la enfermedad y especialmente las 5 preguntas de opción múltiple para que giren en torno a y evalúen de forma rigurosa y directa este subtema solicitado, relacionándolo siempre de manera lógica con la patología del expediente del paciente.`;
 
+    const localModels = [...modelsToTry];
     let response;
-    let attempts = 4;
+    let attempts = 6;
+    let modelIdx = 0;
     let delayMs = 1500;
     for (let attempt = 1; attempt <= attempts; attempt++) {
-      // Rotate models if we encounter 503 errors to ensure maximum reliability
-      const modelName = attempt <= 2 ? "gemini-3.5-flash" : "gemini-3.1-flash-lite";
+      const modelName = localModels[modelIdx];
       try {
         response = await ai.models.generateContent({
           model: modelName,
@@ -177,16 +203,27 @@ Modula el caso clínico, la definición de la enfermedad y especialmente las 5 p
             },
           },
         });
+        markModelAsSuccessful(modelName);
         break; // Success
       } catch (err: any) {
-        console.warn(`Intento ${attempt} de llamar a la API de Gemini falló:`, err);
+        const errMsg = err?.message || err?.toString() || "Error desconocido";
         const errStr = JSON.stringify(err) || err.toString() || "";
-        const isTransient = err.status === 503 || err.status === 429 || errStr.includes("503") || errStr.includes("demand") || errStr.includes("UNAVAILABLE") || errStr.includes("429") || errStr.includes("Too Many Requests");
+        const isTransient = err.status === 503 || err.status === 429 || errStr.includes("503") || errStr.includes("demand") || errStr.includes("UNAVAILABLE") || errStr.includes("429") || errStr.includes("quota") || errStr.includes("RESOURCE_EXHAUSTED") || errStr.includes("Too Many Requests");
+        
         if (attempt < attempts && isTransient) {
-          console.log(`Reintentando en ${delayMs}ms debido a indisponibilidad o alta demanda temporal de la API...`);
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-          delayMs *= 2.5; // Exponential backoff with a factor of 2.5
+          markModelAsFailed(modelName);
+          if (modelIdx < localModels.length - 1) {
+            console.log(`[TRANSITION] Adjusting query routing to ${localModels[modelIdx + 1]} (Route ${attempt}/${attempts}).`);
+            modelIdx++;
+            await new Promise((resolve) => setTimeout(resolve, 300));
+          } else {
+            console.log(`[TRANSITION] Re-routing backup queue (Delay: ${delayMs}ms)...`);
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            modelIdx = 0; // Reiniciar para volver a intentar con el principal
+            delayMs *= 2.5;
+          }
         } else {
+          console.error(`[ERROR] Unrecoverable exception on model ${modelName}:`, err);
           throw err;
         }
       }
@@ -233,6 +270,141 @@ app.get("/api/validate-link", async (req, res) => {
     res.json({ reachable: isOk });
   } catch (err) {
     res.json({ reachable: false });
+  }
+});
+
+app.post("/api/verify-answer", async (req, res) => {
+  const { clinicalCase, questionIndex, selectedAnswerIdx } = req.body;
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+    // Fallback locally
+    const question = clinicalCase.questions[questionIndex];
+    const isCorrect = selectedAnswerIdx === question.correctIndex;
+    return res.json({
+      isCorrect,
+      actualCorrectIndex: question.correctIndex,
+      feedbackExplanation: isCorrect ? question.correctExplanation : question.incorrectExplanation
+    });
+  }
+
+  try {
+    const ai = new GoogleGenAI({
+      apiKey: apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+
+    const question = clinicalCase.questions[questionIndex];
+    const chosenOptionText = question.options[selectedAnswerIdx];
+
+    const systemPrompt = `Eres un Tutor de Bioquímica Médica de primer nivel. Tu tarea es verificar la respuesta de un estudiante a una pregunta de opción múltiple de un caso clínico específico de primer semestre de medicina.
+A veces, el generador automático de preguntas puede cometer un error en el "correctIndex" (índice correcto pre-calculado) o en las explicaciones de la pregunta. Tú debes actuar como la autoridad académica máxima, verificar con absoluto rigor científico si la opción que eligió el alumno es bioquímicamente la respuesta correcta o no, y ofrecer una explicación impecable y amigable.
+
+Responde ÚNICAMENTE con un objeto JSON válido con los siguientes campos:
+1. "isCorrect": true/false (indica si la opción seleccionada por el estudiante es bioquímica y clínicamente la respuesta más adecuada y correcta para la pregunta planteada).
+2. "actualCorrectIndex": número entre 0 y 3 (el índice de la opción realmente correcta).
+3. "feedbackExplanation": string (una explicación clara, motivadora y científicamente rigurosa en español para el estudiante, fundamentando por qué la respuesta que seleccionó es correcta o incorrecta en base al caso clínico).`;
+
+    const promptText = `
+Caso Clínico:
+Título: ${clinicalCase.title}
+Paciente: ${clinicalCase.patient?.name} (${clinicalCase.patient?.age} años, ${clinicalCase.patient?.gender})
+Narrativa: ${clinicalCase.narrative}
+Explicación de la enfermedad: ${clinicalCase.diseaseDefinition}
+
+Resultados de Laboratorio:
+${JSON.stringify(clinicalCase.laboratory)}
+
+Pregunta a evaluar (Pregunta #${questionIndex + 1}):
+Texto: ${question.questionText}
+Opciones:
+0: ${question.options[0]}
+1: ${question.options[1]}
+2: ${question.options[2]}
+3: ${question.options[3]}
+
+Índice pre-definido como correcto: ${question.correctIndex}
+
+Selección del estudiante:
+Índice seleccionado por el estudiante: ${selectedAnswerIdx}
+Texto de la opción seleccionada: "${chosenOptionText}"
+
+Por favor, determina si la opción seleccionada es bioquímica y fisiopatológicamente la correcta. Si el índice pre-definido original estuviera equivocado, corrígelo e indícalo en "actualCorrectIndex", asegurándote de que coincida con la ciencia médica real. Devuelve el JSON correspondiente.
+`;
+
+    const localModels = [...modelsToTry];
+    let response;
+    let attempts = 5;
+    let modelIdx = 0;
+    let delayMs = 1000;
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      const modelName = localModels[modelIdx];
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents: promptText,
+          config: {
+            systemInstruction: systemPrompt,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                isCorrect: { type: Type.BOOLEAN, description: "True si la opción del alumno es la correcta." },
+                actualCorrectIndex: { type: Type.INTEGER, description: "El índice real de la opción correcta (0-3)." },
+                feedbackExplanation: { type: Type.STRING, description: "Explicación académica detallada de la retroalimentación en español." }
+              },
+              required: ["isCorrect", "actualCorrectIndex", "feedbackExplanation"]
+            }
+          }
+        });
+        markModelAsSuccessful(modelName);
+        break; // success
+      } catch (err: any) {
+        const errMsg = err?.message || err?.toString() || "Error desconocido";
+        const errStr = JSON.stringify(err) || err.toString() || "";
+        const isTransient = err.status === 503 || err.status === 429 || errStr.includes("503") || errStr.includes("demand") || errStr.includes("UNAVAILABLE") || errStr.includes("429") || errStr.includes("quota") || errStr.includes("RESOURCE_EXHAUSTED") || errStr.includes("Too Many Requests");
+        
+        if (attempt < attempts && isTransient) {
+          markModelAsFailed(modelName);
+          if (modelIdx < localModels.length - 1) {
+            console.log(`[TRANSITION] Adjusting verification routing to ${localModels[modelIdx + 1]} (Route ${attempt}/${attempts}).`);
+            modelIdx++;
+            await new Promise((resolve) => setTimeout(resolve, 300));
+          } else {
+            console.log(`[TRANSITION] Re-routing verification queue (Delay: ${delayMs}ms)...`);
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            modelIdx = 0; // Reiniciar para volver a intentar con el principal
+            delayMs *= 2.5;
+          }
+        } else {
+          console.error(`[ERROR] Unrecoverable exception during verification on model ${modelName}:`, err);
+          throw err;
+        }
+      }
+    }
+
+    const text = response?.text;
+    if (!text) {
+      throw new Error("No se recibió respuesta del modelo de verificación.");
+    }
+
+    const verificationResult = JSON.parse(text.trim());
+    res.json(verificationResult);
+  } catch (err: any) {
+    console.error("Error verifying answer:", err);
+    // Secure failover
+    const question = clinicalCase.questions[questionIndex];
+    const isCorrect = selectedAnswerIdx === question.correctIndex;
+    res.json({
+      isCorrect,
+      actualCorrectIndex: question.correctIndex,
+      feedbackExplanation: isCorrect ? question.correctExplanation : question.incorrectExplanation,
+      fallbackUsed: true
+    });
   }
 });
 
