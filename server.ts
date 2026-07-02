@@ -207,6 +207,33 @@ Modula el caso clínico, la definición de la enfermedad y especialmente las 5 p
   }
 });
 
+app.get("/api/validate-link", async (req, res) => {
+  const targetUrl = req.query.url as string;
+  if (!targetUrl) {
+    return res.json({ reachable: false });
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1800); // 1.8 seconds timeout
+    
+    const response = await fetch(targetUrl, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+      },
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    const isOk = response.status >= 200 && response.status < 400;
+    res.json({ reachable: isOk });
+  } catch (err) {
+    res.json({ reachable: false });
+  }
+});
+
 // Serve frontend assets
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

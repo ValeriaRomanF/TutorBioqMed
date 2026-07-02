@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Droplet, 
   Activity, 
@@ -23,11 +23,13 @@ import {
   HelpCircle,
   Clock,
   FlaskConical,
-  MessageSquareQuote
+  MessageSquareQuote,
+  Download
 } from "lucide-react";
 import { THEMES, FALLBACK_CASES } from "./data";
 import { ClinicalCase, ThemeInfo } from "./types";
 import { motion, AnimatePresence } from "motion/react";
+import { jsPDF } from "jspdf";
 
 // Explicit mappings for Tailwind v4 compile-time safe coloring
 const themeColors: Record<string, {
@@ -159,6 +161,265 @@ const IconMapper = ({ name, className }: { name: string; className?: string }) =
       return <FlaskConical className={className} />;
   }
 };
+
+interface SmartLinkProps {
+  href: string;
+  label: string;
+  fallbackTerm: string;
+  className?: string;
+  useWikipediaFallback?: boolean;
+}
+
+export function SmartLink({ href, label, fallbackTerm, className, useWikipediaFallback = true }: SmartLinkProps) {
+  const [resolvedUrl, setResolvedUrl] = useState<string>(href);
+  const [resolvedLabel, setResolvedLabel] = useState<string>(label);
+
+  const cleanAndFallback = (urlStr: string, term: string, forceWiki = false): string => {
+    if (!urlStr) {
+      return forceWiki 
+        ? `https://es.wikipedia.org/w/index.php?search=${encodeURIComponent(term)}`
+        : `https://es.khanacademy.org/search?page_search_query=${encodeURIComponent(term)}`;
+    }
+    
+    let clean = urlStr.trim();
+    
+    if (clean.includes("[") || clean.includes("]") || clean.includes("termino_busqueda") || clean.includes("tema_relevante")) {
+      clean = clean.replace(/\[?termino_busqueda\]?/g, encodeURIComponent(term))
+                   .replace(/\[?tema_relevante\]?/g, encodeURIComponent(term))
+                   .replace(/[\[\]]/g, "");
+    }
+    
+    const forbidden = ["pubmed", "ncbi.nlm.nih.gov", "researchgate", "elsevier", "springer"];
+    const isForbidden = forbidden.some(domain => clean.toLowerCase().includes(domain));
+    
+    if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
+      return forceWiki 
+        ? `https://es.wikipedia.org/w/index.php?search=${encodeURIComponent(term)}`
+        : `https://es.khanacademy.org/search?page_search_query=${encodeURIComponent(term)}`;
+    }
+    
+    if (isForbidden) {
+      return forceWiki 
+        ? `https://es.wikipedia.org/w/index.php?search=${encodeURIComponent(term)}`
+        : `https://es.khanacademy.org/search?page_search_query=${encodeURIComponent(term)}`;
+    }
+    
+    return clean;
+  };
+
+  useEffect(() => {
+    const cleanUrl = cleanAndFallback(href, fallbackTerm, useWikipediaFallback);
+    setResolvedUrl(cleanUrl);
+
+    const verifyReachability = async () => {
+      try {
+        const response = await fetch(`/api/validate-link?url=${encodeURIComponent(cleanUrl)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.reachable) {
+            const fallbackUrl = useWikipediaFallback
+              ? `https://es.wikipedia.org/w/index.php?search=${encodeURIComponent(fallbackTerm)}`
+              : `https://es.khanacademy.org/search?page_search_query=${encodeURIComponent(fallbackTerm)}`;
+            
+            setResolvedUrl(fallbackUrl);
+            setResolvedLabel(useWikipediaFallback ? "Búsqueda en Wikipedia" : "Búsqueda en Khan Academy");
+          }
+        }
+      } catch (e) {
+        // Safe failover
+      }
+    };
+
+    verifyReachability();
+  }, [href, fallbackTerm, useWikipediaFallback]);
+
+  return (
+    <a
+      href={resolvedUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+    >
+      {resolvedLabel}
+      <ExternalLink className="w-3.5 h-3.5 inline-block shrink-0" />
+    </a>
+  );
+}
+
+export function generateReportPDF(
+  clinicalCase: ClinicalCase,
+  selectedTheme: ThemeInfo,
+  userAnswers: Record<number, number>,
+  score: number
+) {
+  const doc = new jsPDF();
+  let y = 20;
+
+  const checkPageBreak = (neededHeight: number) => {
+    if (y + neededHeight > 275) {
+      doc.addPage();
+      y = 20;
+    }
+  };
+
+  // Header Banner
+  doc.setFillColor(30, 41, 59); // Slate 800
+  doc.rect(15, y, 180, 22, "F");
+  
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("REPORTE DE EVALUACION CLINICA", 20, y + 9);
+  
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text("Simulador de Bioquimica Medica Basado en Evidencia", 20, y + 16);
+  y += 28;
+
+  // Metadata Box
+  doc.setDrawColor(226, 232, 240); // border
+  doc.setFillColor(248, 250, 252); // bg
+  doc.rect(15, y, 180, 36, "FD");
+
+  doc.setTextColor(30, 41, 59);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Resumen del Desempeno", 20, y + 8);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Tema / Bloque: ${selectedTheme.name}`, 20, y + 15);
+  doc.text(`Paciente: ${clinicalCase.patient?.name || "Paciente Ficticio"} (${clinicalCase.patient?.age || ""} anos, ${clinicalCase.patient?.gender || ""})`, 20, y + 21);
+  doc.text(`Fecha de Evaluacion: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}`, 20, y + 27);
+
+  // Score badge on right side
+  doc.setFillColor(79, 70, 229); // Indigo 600
+  doc.rect(145, y + 6, 40, 24, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.text("CALIFICACION", 150, y + 13);
+  doc.setFontSize(16);
+  doc.text(`${score} / 5`, 150, y + 23);
+
+  y += 42;
+
+  // Case Introduction
+  checkPageBreak(30);
+  doc.setTextColor(30, 41, 59);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Caso Clinico:", 15, y);
+  y += 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  const titleLines = doc.splitTextToSize(clinicalCase.title, 180);
+  doc.text(titleLines, 15, y);
+  y += (titleLines.length * 4.5) + 8;
+
+  // Divider
+  doc.setDrawColor(226, 232, 240);
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  // Detailed Breakdown Section
+  checkPageBreak(15);
+  doc.setTextColor(30, 41, 59);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Desglose Detallado de Preguntas", 15, y);
+  y += 8;
+
+  clinicalCase.questions.forEach((q, idx) => {
+    const userAnsIdx = userAnswers[idx];
+    const isCorrect = userAnsIdx === q.correctIndex;
+    const userAnswerText = q.options[userAnsIdx] || "No respondida";
+    const correctAnswerText = q.options[q.correctIndex];
+
+    const qLines = doc.splitTextToSize(`${idx + 1}. ${q.questionText}`, 172);
+    const ansLines = doc.splitTextToSize(`Tu Respuesta: ${userAnswerText}`, 172);
+    const correctLines = doc.splitTextToSize(`Respuesta Correcta: ${correctAnswerText}`, 172);
+    const explText = `Explicacion Academica: ${isCorrect ? q.correctExplanation : q.incorrectExplanation}`;
+    const explLines = doc.splitTextToSize(explText, 172);
+    const linkText = `Recurso de Refuerzo: ${q.repassLinkLabel || "Enlace Academico"} -> ${q.repassLinkUrl}`;
+    const linkLines = doc.splitTextToSize(linkText, 172);
+
+    const neededHeight = (qLines.length + ansLines.length + (isCorrect ? 0 : correctLines.length) + explLines.length + linkLines.length) * 5 + 15;
+    checkPageBreak(neededHeight);
+
+    // Question Box background
+    doc.setFillColor(252, 253, 254);
+    doc.setDrawColor(241, 245, 249);
+    doc.rect(15, y, 180, neededHeight - 6, "FD");
+
+    // Left indicator bar (green/red)
+    if (isCorrect) {
+      doc.setFillColor(16, 185, 129); // Emerald 500
+    } else {
+      doc.setFillColor(244, 63, 94); // Rose 500
+    }
+    doc.rect(15, y, 2.5, neededHeight - 6, "F");
+
+    let textY = y + 6;
+
+    // Draw Question Text
+    doc.setTextColor(30, 41, 59);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.text(qLines, 20, textY);
+    textY += qLines.length * 4.5 + 2;
+
+    // Draw User Answer
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    if (isCorrect) {
+      doc.setTextColor(4, 120, 87); // Emerald 700
+    } else {
+      doc.setTextColor(190, 24, 74); // Rose 700
+    }
+    doc.text(ansLines, 20, textY);
+    textY += ansLines.length * 4.2 + 1;
+
+    // Draw Correct Answer if incorrect
+    if (!isCorrect) {
+      doc.setTextColor(4, 120, 87); // Emerald 700
+      doc.text(correctLines, 20, textY);
+      textY += correctLines.length * 4.2 + 1;
+    }
+
+    // Draw Explanation
+    doc.setTextColor(100, 116, 139); // Slate 500
+    doc.setFont("helvetica", "normal");
+    doc.text(explLines, 20, textY);
+    textY += explLines.length * 4.2 + 2;
+
+    // Draw academic reinforcement link
+    doc.setTextColor(79, 70, 229); // Indigo 600
+    doc.setFont("helvetica", "bold");
+    doc.text(linkLines, 20, textY);
+    
+    y += neededHeight + 2;
+  });
+
+  // Footer / Recommendation Block
+  const promoHeight = 25;
+  checkPageBreak(promoHeight);
+  doc.setDrawColor(226, 232, 240);
+  doc.line(15, y, 195, y);
+  y += 6;
+
+  doc.setTextColor(148, 163, 184); // Slate 400
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.text("Este reporte fue autogenerado por el Simulador de Bioquimica Medica Basado en Evidencia Cientifica.", 15, y);
+  doc.text("Visita las fuentes recomendadas para consolidar tus competencias conceptuales y analiticas.", 15, y + 4.5);
+
+  // Save the PDF
+  doc.save(`Reporte_Evaluacion_Bioquimica_${selectedTheme.name.replace(/\s+/g, "_")}.pdf`);
+}
 
 export default function App() {
   // Application State
@@ -928,19 +1189,17 @@ export default function App() {
                                 : "text-rose-700"
                             }`}>Revisa esta fuente oficial recomendada para profundizar:</span>
                           </div>
-                          <a
+                          <SmartLink
                             href={clinicalCase.questions[currentQuestionIdx].repassLinkUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            label={clinicalCase.questions[currentQuestionIdx].repassLinkLabel}
+                            fallbackTerm={clinicalCase.questions[currentQuestionIdx].repassLinkLabel || clinicalCase.title || selectedTheme?.name || ""}
                             className={`shrink-0 border text-[10px] font-bold uppercase tracking-wider py-2 px-3.5 rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-1 ${
                               userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex
                                 ? "bg-white hover:bg-emerald-100 border-emerald-200 text-emerald-700"
                                 : "bg-white hover:bg-rose-100 border-rose-200 text-rose-700"
                             }`}
-                          >
-                            {clinicalCase.questions[currentQuestionIdx].repassLinkLabel}
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
+                            useWikipediaFallback={true}
+                          />
                         </div>
                       </motion.div>
                     )}
@@ -1111,15 +1370,13 @@ export default function App() {
 
                 <div className="mt-4 pt-3 border-t border-emerald-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[10px] text-emerald-700 font-mono">
                   <span className="font-bold">Fuente: {clinicalCase.datoCurioso.reference}</span>
-                  <a
+                  <SmartLink
                     href={clinicalCase.datoCurioso.linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    label={clinicalCase.datoCurioso.linkLabel}
+                    fallbackTerm={clinicalCase.datoCurioso.linkLabel || clinicalCase.title || selectedTheme?.name || ""}
                     className="underline font-bold hover:text-emerald-900 inline-flex items-center gap-0.5"
-                  >
-                    {clinicalCase.datoCurioso.linkLabel}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                    useWikipediaFallback={true}
+                  />
                 </div>
               </div>
 
@@ -1162,6 +1419,14 @@ export default function App() {
                   <h4 className="font-display font-bold text-slate-900 text-sm">¿Qué deseas estudiar ahora?</h4>
                   <p className="text-xs text-slate-400 mt-1">Elige otro bloque del plan de estudios.</p>
                 </div>
+
+                <button
+                  onClick={() => generateReportPDF(clinicalCase, selectedTheme, userAnswers, score)}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  Descargar Reporte PDF
+                </button>
 
                 <button
                   onClick={handleRestart}
