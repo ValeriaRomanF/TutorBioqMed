@@ -75,11 +75,13 @@ Modula el caso clínico, la definición de la enfermedad y especialmente las 5 p
 
     let response;
     let attempts = 4;
-    let delayMs = 1000;
+    let delayMs = 1500;
     for (let attempt = 1; attempt <= attempts; attempt++) {
+      // Rotate models if we encounter 503 errors to ensure maximum reliability
+      const modelName = attempt <= 2 ? "gemini-3.5-flash" : "gemini-3.1-flash-lite";
       try {
         response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: modelName,
           contents: promptText,
           config: {
             systemInstruction: systemPrompt,

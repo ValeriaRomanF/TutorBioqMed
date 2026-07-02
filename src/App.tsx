@@ -250,7 +250,8 @@ export function generateReportPDF(
   clinicalCase: ClinicalCase,
   selectedTheme: ThemeInfo,
   userAnswers: Record<number, number>,
-  score: number
+  score: number,
+  studentName?: string
 ) {
   const doc = new jsPDF();
   let y = 20;
@@ -279,7 +280,9 @@ export function generateReportPDF(
   // Metadata Box
   doc.setDrawColor(226, 232, 240); // border
   doc.setFillColor(248, 250, 252); // bg
-  doc.rect(15, y, 180, 36, "FD");
+  const hasStudent = !!studentName?.trim();
+  const boxHeight = hasStudent ? 42 : 36;
+  doc.rect(15, y, 180, boxHeight, "FD");
 
   doc.setTextColor(30, 41, 59);
   doc.setFont("helvetica", "bold");
@@ -292,10 +295,14 @@ export function generateReportPDF(
   doc.text(`Tema / Bloque: ${selectedTheme.name}`, 20, y + 15);
   doc.text(`Paciente: ${clinicalCase.patient?.name || "Paciente Ficticio"} (${clinicalCase.patient?.age || ""} anos, ${clinicalCase.patient?.gender || ""})`, 20, y + 21);
   doc.text(`Fecha de Evaluacion: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}`, 20, y + 27);
+  if (hasStudent) {
+    doc.text(`Estudiante / Equipo: ${studentName?.trim()}`, 20, y + 33);
+  }
 
   // Score badge on right side
   doc.setFillColor(79, 70, 229); // Indigo 600
-  doc.rect(145, y + 6, 40, 24, "F");
+  const badgeHeight = hasStudent ? 30 : 24;
+  doc.rect(145, y + 6, 40, badgeHeight, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
@@ -303,7 +310,7 @@ export function generateReportPDF(
   doc.setFontSize(16);
   doc.text(`${score} / 5`, 150, y + 23);
 
-  y += 42;
+  y += boxHeight + 6;
 
   // Case Introduction
   checkPageBreak(30);
@@ -438,6 +445,7 @@ export default function App() {
   const [isQuestionAnswered, setIsQuestionAnswered] = useState(false);
   const [userAnswers, setUserAnswers] = useState<number[]>([]); // indexes of chosen options
   const [score, setScore] = useState(0);
+  const [studentName, setStudentName] = useState("");
 
   // Start case generation (API or Fallback)
   const handleSelectTheme = async (theme: ThemeInfo, forceFallback = false) => {
@@ -541,6 +549,7 @@ export default function App() {
     setApiKeyMissingError(null);
     setIsFallbackMode(false);
     resetQuiz();
+    setStudentName("");
   };
 
   return (
@@ -1420,8 +1429,25 @@ export default function App() {
                   <p className="text-xs text-slate-400 mt-1">Elige otro bloque del plan de estudios.</p>
                 </div>
 
+                <div className="border-t border-b border-slate-100 py-3.5 my-1 text-left">
+                  <label htmlFor="student-name-input" className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Nombre del Alumno o Equipo:
+                  </label>
+                  <input
+                    id="student-name-input"
+                    type="text"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    placeholder="Ej. Juan Pérez / Equipo Alfa"
+                    className="w-full text-xs px-3.5 py-2 border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 placeholder-slate-400 bg-slate-50 font-medium"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
+                    * El nombre ingresado se incluirá de forma oficial en el reporte PDF descargado.
+                  </p>
+                </div>
+
                 <button
-                  onClick={() => generateReportPDF(clinicalCase, selectedTheme, userAnswers, score)}
+                  onClick={() => generateReportPDF(clinicalCase, selectedTheme, userAnswers, score, studentName)}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
