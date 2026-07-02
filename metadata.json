@@ -1,0 +1,6 @@
+{
+  "name": "Tutor de Bioquímica Médica",
+  "description": "Simulador interactivo de casos clínicos y tutor de bioquímica para estudiantes de primer semestre de medicina.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
