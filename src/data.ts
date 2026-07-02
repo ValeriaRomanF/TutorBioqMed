@@ -119,8 +119,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Correcto! La ADH o Vasopresina se secreta ante estímulos barorreceptores (baja presión/volumen) u osmorreceptores (alta osmolaridad). Esta hormona induce la translocación de acuaporinas-2 en los túbulos renales para absorber agua libre y concentrar la orina.",
         incorrectExplanation: "Incorrecto. La aldosterona estimula la reabsorción de sodio y secreción de potasio/hidrógeno, pero no reabsorbe directamente agua libre de forma aislada. La hormona principal para absorber agua pura es la ADH.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK526069/",
-        repassLinkLabel: "NCBI - Fisiología de la Vasopresina (ADH)"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=vasopresina+antidiuretica",
+        repassLinkLabel: "MedlinePlus - Hormona Antidiurética"
       },
       {
         questionText: "¿A través de qué proteínas de membrana específicas fluye el agua a través de las células renales para concentrar la orina?",
@@ -133,8 +133,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 2,
         correctExplanation: "¡Así es! Las acuaporinas son canales proteicos transmembrana altamente selectivos para las moléculas de agua, permitiendo su paso rápido a favor de un gradiente osmótico sin consumir energía directa.",
         incorrectExplanation: "Incorrecto. Los transportadores SGLT transportan glucosa acoplada a sodio, y la Na+/K+ ATPasa es una bomba de iones. Las proteínas dedicadas específicamente al flujo selectivo de agua son las acuaporinas.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK537151/",
-        repassLinkLabel: "NCBI - Estructura y Función de las Acuaporinas"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=acuaporinas",
+        repassLinkLabel: "MedlinePlus - Acuaporinas"
       },
       {
         questionText: "¿Qué tipo de solución intravenosa es la más indicada bioquímicamente para expandir el volumen extracelular de Mateo sin alterar el volumen celular?",
@@ -147,8 +147,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 0,
         correctExplanation: "¡Brillante! La Solución Salina al 0.9% tiene una osmolaridad de ~308 mOsm/L, muy cercana a la del plasma. Permite reponer agua y sodio en el espacio extracelular sin inducir gradientes osmóticos que deshidraten o hinchen las células cerebrales.",
         incorrectExplanation: "Incorrecto. El agua destilada pura por vía intravenosa causaría una hemólisis (ruptura de glóbulos rojos) masiva debido a que es una solución hipotónica extrema que hincharía las células sanguíneas hasta reventarlas.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK545190/",
-        repassLinkLabel: "NCBI - Fluidoterapia e Isotonicidad"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=fluidoterapia+suero+fisiologico",
+        repassLinkLabel: "MedlinePlus - Suero Fisiológico e Hidratación"
       }
     ],
     datoCurioso: {
@@ -204,8 +204,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Excelente! Los quimiorreceptores detectan la caída del pH y estimulan el centro respiratorio para hiperventilar. Al 'soplar' o eliminar CO2 gaseoso, la reacción [H+] + [HCO3-] <=> [H2CO3] <=> [H2O] + [CO2] se desplaza hacia la derecha, consumiendo protones y ayudando a elevar el pH de vuelta al rango seguro.",
         incorrectExplanation: "Incorrecto. Retener CO2 (opción A) aumentaría la acidez de la sangre, empeorando el estado de Valeria. Ella está hiperventilando para eliminar CO2 y así disminuir los hidrogeniones libres.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK482430/",
-        repassLinkLabel: "NCBI - Cetoacidosis Diabética y Compensación"
+        repassLinkUrl: "https://medlineplus.gov/spanish/ency/article/000320.htm",
+        repassLinkLabel: "MedlinePlus - Cetoacidosis Diabética"
       },
       {
         questionText: "Químicamente, los cuerpos cetónicos ácido acetoacético y ácido beta-hidroxibutírico son considerados:",
@@ -218,8 +218,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 2,
         correctExplanation: "¡Correcto! Poseen un grupo funcional carboxilo (-COOH) con un pKa de aproximadamente 3.8 a 4.8. Al estar expuestos al pH plasmático normal de 7.4 (mucho mayor que su pKa), se disocian liberando una avalancha de protones y formando sus bases conjugadas (acetoacetato y beta-hidroxibutirato).",
         incorrectExplanation: "Incorrecto. No son ácidos fuertes como el HCl. Son ácidos orgánicos débiles, pero debido a su masiva producción en ausencia de insulina, liberan suficientes protones para sobrepasar la capacidad tampón del bicarbonato corporal.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK493179/",
-        repassLinkLabel: "NCBI - Bioquímica de los Cuerpos Cetónicos"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=cuerpos+cetonicos",
+        repassLinkLabel: "MedlinePlus - Cuerpos Cetónicos"
       },
       {
         questionText: "¿Qué enzima mitocondrial hepática, inhibida por altos niveles de insulina, se encuentra sobreactivada en Valeria, acelerando la producción de cuerpos cetónicos?",
@@ -244,10 +244,10 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
           "D) Provoca que los lípidos de membrana de los eritrocitos se vuelvan impermeables a los azúcares."
         ],
         correctIndex: 1,
-        correctExplanation: "¡Maravilloso! El músculo esquelético y el tejido adiposo requieren de insulina para movilizar los transportadores GLUT4 desde las vesículas intracelulares hacia la superficie de la membrana. Una vez en la membrana, estos transportadores facilitan la entrada de glucosa por difusión facilitada, resolviendo la hiperglucemia.",
+        correctExplanation: "¡Maravilloso! El músculo esquelético y el tejido adiposo requieren de insulina para mobilizar los transportadores GLUT4 desde las vesículas intracelulares hacia la superficie de la membrana. Una vez en la membrana, estos transportadores facilitan la entrada de glucosa por difusión facilitada, resolviendo la hiperglucemia.",
         incorrectExplanation: "Incorrecto. Los transportadores cerebrales son principalmente GLUT1 y GLUT3, los cuales son independientes de insulina (el cerebro capta glucosa sin necesidad de insulina). El blanco insulinodependiente por excelencia es GLUT4.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK537259/",
-        repassLinkLabel: "NCBI - Transportadores de Glucosa y GLUT4"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=insulina+glucosa",
+        repassLinkLabel: "MedlinePlus - Acción de la Insulina"
       }
     ],
     datoCurioso: {
@@ -316,8 +316,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Fantástico! La glucosa y galactosa ingresan por el polo apical del enterocito mediante SGLT-1, un transportador que realiza transporte activo secundario usando el gradiente de sodio generado por la bomba Na+/K+ ATPasa.",
         incorrectExplanation: "Incorrecto. Las hexosas son moléculas polares grandes que no pueden cruzar la bicapa por difusión simple, ni usan acuaporinas. SGLT1 es el transportador acoplado a sodio responsable de este paso.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK553181/",
-        repassLinkLabel: "NCBI - Fisiología del enterocito y SGLT"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=fisiologia+enterocito+absorpcion",
+        repassLinkLabel: "MedlinePlus - Absorción Intestinal de Azúcares"
       },
       {
         questionText: "¿Cómo se transporta la galactosa liberada al hígado para su conversión en metabolitos de la glucólisis, y qué transportador de difusión facilitada la introduce a las células hepáticas?",
@@ -330,8 +330,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Excepcional! Los monosacáridos salen del enterocito hacia la circulación portal por el transportador GLUT2. Luego, en el hígado, los hepatocitos captan la galactosa y la glucosa a través de GLUT2, facilitando su metabolismo de almacenamiento o degradación.",
         incorrectExplanation: "Incorrecto. Los hepatocitos no expresan GLUT4 (que es dependiente de insulina y exclusivo de músculo y grasa), sino GLUT2, un transportador de alta capacidad que permite flujos masivos bidireccionales de azúcares.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK541094/",
-        repassLinkLabel: "NCBI - Bioquímica de la Galactosa y GLUTs"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=galactosa+gluts",
+        repassLinkLabel: "MedlinePlus - Catabolismo de Galactosa"
       },
       {
         questionText: "¿Cuál es la enzima del hígado responsable de la fosforilación inicial de la galactosa (vía de Leloir) para que no pueda escapar de la célula hepática?",
@@ -344,8 +344,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Perfecto! La galactocinasa fosforila la galactosa consumiendo ATP para producir galactosa-1-fosfato. Esto introduce una carga negativa que impide que el azúcar cruce los transportadores de membrana, atrapándola en la célula hepática para su procesamiento metabólico.",
         incorrectExplanation: "Incorrecto. La glucocinasa actúa principalmente sobre la glucosa. El metabolismo hepático de la galactosa requiere de la galactocinasa (GALK) para su atrapamiento inicial.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK513324/",
-        repassLinkLabel: "NCBI - Galactosemia y Vía de Leloir"
+        repassLinkUrl: "https://medlineplus.gov/spanish/genetics/condition/galactosemia/",
+        repassLinkLabel: "MedlinePlus - Galactosemia"
       }
     ],
     datoCurioso: {
@@ -401,8 +401,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Excelente nivel! Cuando la HbS se desoxigena (libera O2 en los tejidos), su conformación estructural cambia (estado T). En este estado, el parche de valina mutada en la cadena beta se expone y encaja en una cavidad hidrófoba de otra cadena beta vecina, polimerizando en largas fibras rígidas que curvan el eritrocito en forma de falce o media luna.",
         incorrectExplanation: "Incorrecto. En estado oxigenado (estado R), la valina mutada está oculta y la hemoglobina se disuelve bien. La polimerización dañina ocurre exclusivamente ante la desoxigenación (bajos niveles de O2, ejercicio, frío, deshidratación).",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK482384/",
-        repassLinkLabel: "NCBI - Fisiopatología de la Anemia Falciforme"
+        repassLinkUrl: "https://medlineplus.gov/spanish/ency/article/000527.htm",
+        repassLinkLabel: "MedlinePlus - Anemia de Células Falciformes"
       },
       {
         questionText: "¿Por qué los eritrocitos falciformes provocan crisis de dolor agudo tan intensas en las extremidades de Abigail?",
@@ -443,15 +443,15 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 2,
         correctExplanation: "¡Excelente! El enlace peptídico es un enlace covalente fuerte de tipo amida que se forma mediante condensación del grupo carboxilo de un aminoácido y el grupo amino del siguiente, liberando una molécula de agua y dando estabilidad a la cadena polipeptídica.",
         incorrectExplanation: "Incorrecto. Los puentes de hidrógeno estabilizan estructuras secundarias (alfa hélice/lámina beta), pero no unen los aminoácidos covalentemente en la secuencia principal. Ese es el enlace peptídico.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK26830/",
-        repassLinkLabel: "NCBI - El enlace peptídico y síntesis proteica"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=enlaces+peptidicos+proteinas",
+        repassLinkLabel: "MedlinePlus - Enlaces Peptídicos y Proteínas"
       }
     ],
     datoCurioso: {
       trivia: "La mutación de la anemia falciforme proporciona una ventaja adaptativa: ofrece resistencia a la malaria (causada por el parásito Plasmodium falciparum). Los eritrocitos portadores de HbS se destruyen más rápido al ser infectados, impidiendo que el parásito complete su ciclo biológico. Esto explica por qué el gen persiste con alta frecuencia en regiones endémicas de malaria.",
-      reference: "Organización Mundial de la Salud / PubMed, 2022",
-      linkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK537130/",
-      linkLabel: "NCBI - Alelos de HbS y Malaria"
+      reference: "Organización Mundial de la Salud / CDC, 2022",
+      linkUrl: "https://www.who.int/es/news-room/fact-sheets/detail/malaria",
+      linkLabel: "OMS - Malaria y Genética"
     },
     glossary: [
       { term: "Ictericia", definition: "Coloración amarillenta de la piel, membranas mucosas y ojos debido a una acumulación de bilirrubina plasmática." },
@@ -500,8 +500,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Perfecto! La ApoB-100 es el único ligando proteico presente en las partículas LDL puras. El rLDL reconoce específicamente a la ApoB-100, permitiendo que la partícula LDL sea internalizada por la célula hepática mediante una fosa revestida de clatrina.",
         incorrectExplanation: "Incorrecto. ApoA-1 es característica de la HDL. ApoC-2 activa a la lipoproteína lipasa (LPL). El ligando exclusivo de reconocimiento de la LDL madura es la ApoB-100.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK305896/",
-        repassLinkLabel: "NCBI - Lipoproteínas y Apoproteínas"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=lipoproteinas+apoproteinas",
+        repassLinkLabel: "MedlinePlus - Lipoproteínas y Colesterol"
       },
       {
         questionText: "A nivel celular, ¿qué ocurre con el colesterol y el rLDL una vez que la vesícula de endocitosis con LDL se une a un lisosoma celular?",
@@ -514,8 +514,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 2,
         correctExplanation: "¡Excelente nivel celular! El pH ácido del endosoma/lisosoma disocia el complejo ligando-receptor. El receptor LDL se recicla hacia la membrana plasmática, mientras que los ésteres de colesterol son hidrolizados liberando colesterol libre, el cual regula a la baja la enzima HMG-CoA Reductasa hepática.",
         incorrectExplanation: "Incorrecto. El receptor rLDL normalmente se recicla a la membrana plasmática (no se destruye) para continuar captando LDL. El colesterol se libera para cubrir necesidades celulares o regular la síntesis.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK470561/",
-        repassLinkLabel: "NCBI - Regulación del receptor rLDL"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=receptores+ldl",
+        repassLinkLabel: "MedlinePlus - Receptores LDL"
       },
       {
         questionText: "¿Cuál es la enzima clave reguladora en la síntesis del colesterol intracelular, que es inhibida de manera farmacológica por las estatinas administradas a Rodrigo?",
@@ -542,8 +542,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Excelente! El colesterol posee un núcleo esteroide plano muy rígido e hidrófobo, con un grupo hidroxilo (-OH) polar en un extremo. Esta modesta anfipatía le permite intercalarse perfectamente entre los fosfolípidos de las bicapas lipídicas, controlando la fluidez de las membranas.",
         incorrectExplanation: "Incorrecto. Tres ácidos grasos unidos a un glicerol corresponden a un triglicérido. El colesterol tiene como base el núcleo hidrocarbonado de 4 anillos fusionados conocido como ciclopentanoperhidrofenantreno.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK470561/",
-        repassLinkLabel: "NCBI - Estructura y Función del Colesterol"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=colesterol+estructura",
+        repassLinkLabel: "MedlinePlus - Estructura del Colesterol"
       }
     ],
     datoCurioso: {
@@ -584,8 +584,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Correcto! En los seres humanos, la degradación de los nucleótidos de purina (AMP y GMP) converge en la formación de xantina. La xantina oxidasa cataliza las reacciones sucesivas de oxidación de hipoxantina a xantina, y de esta a ácido úrico, el producto final excretado por la orina.",
         incorrectExplanation: "Incorrecto. El ciclo de la urea degrada el amonio de los aminoácidos para excretarlo como urea. Las purinas (adenina/guanina) se catabolizan de forma exclusiva hasta ácido úrico por acción de la xantina oxidasa.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK546607/",
-        repassLinkLabel: "NCBI - Catabolismo de Purinas y Ácido Úrico"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=metabolismo+purinas",
+        repassLinkLabel: "MedlinePlus - Metabolismo de Purinas"
       },
       {
         questionText: "Ernesto toma alopurinol de forma habitual para evitar nuevas crisis. ¿Cómo actúa este fármaco a nivel bioquímico?",
@@ -612,8 +612,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 0,
         correctExplanation: "¡Excelente dato evolutivo! Durante la evolución de los homínidos, el gen de la urato oxidasa (uricasa) sufrió mutaciones que lo inactivaron. Como resultado, carecemos de esta enzima hepática y excretamos ácido úrico insoluble en lugar de alantoína soluble, predisponiéndonos a padecer gota.",
         incorrectExplanation: "Incorrecto. Los humanos sí poseemos y requerimos guanina (el ADN/ARN la tiene). El defecto evolutivo real es la ausencia genética de la enzima uricasa encargada de oxidar el ácido úrico a alantoína soluble.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK459218/",
-        repassLinkLabel: "NCBI - Gota y evolución de la Uricasa"
+        repassLinkUrl: "https://find.medlineplus.gov/search?query=enfermedad+gota",
+        repassLinkLabel: "MedlinePlus - Diagnóstico de Gota"
       },
       {
         questionText: "¿Cuáles son las bases nitrogenadas clasificadas químicamente como purinas (que contienen dos anillos fusionados de carbono y nitrógeno), cuya degradación genera el ácido úrico?",
@@ -640,8 +640,8 @@ export const FALLBACK_CASES: Record<string, ClinicalCase> = {
         correctIndex: 1,
         correctExplanation: "¡Fantástico! La vía de salvamento recupera bases libres (hipoxantina, guanina) y las reincorpora a nucleótidos usando la enzima Hipoxantina-Guanina Fosforribosiltransferasa (HGPRT). Su ausencia total provoca la acumulación masiva de purinas destinadas a la degradación, disparando el ácido úrico y originando el grave Síndrome de Lesch-Nyhan.",
         incorrectExplanation: "Incorrecto. La vía de Leloir metaboliza la galactosa. El salvamento o rescate de bases libres de purina depende fundamentalmente de la enzima HGPRT, vital para regular los niveles de ácido úrico sérico.",
-        repassLinkUrl: "https://www.ncbi.nlm.nih.gov/books/NBK535398/",
-        repassLinkLabel: "NCBI - Síndrome de Lesch-Nyhan y HGPRT"
+        repassLinkUrl: "https://medlineplus.gov/spanish/genetics/condition/lesch-nyhan-syndrome/",
+        repassLinkLabel: "MedlinePlus - Síndrome de Lesch-Nyhan"
       }
     ],
     datoCurioso: {

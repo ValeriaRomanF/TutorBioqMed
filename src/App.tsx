@@ -164,6 +164,7 @@ export default function App() {
   // Application State
   const [phase, setPhase] = useState<"selection" | "case" | "questions" | "summary">("selection");
   const [selectedTheme, setSelectedTheme] = useState<ThemeInfo | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<string>("Agua");
   const [customPrompt, setCustomPrompt] = useState("");
   const [clinicalCase, setClinicalCase] = useState<ClinicalCase | null>(null);
   const [loading, setLoading] = useState(false);
@@ -436,25 +437,67 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Custom Case Customization Prompt (Bento style) */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col gap-3">
+                {/* Specific Biochemistry Topic to Review (Bento style) */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col gap-3.5">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-emerald-500" />
-                    <h3 className="font-display font-bold text-slate-900 text-xs uppercase tracking-wider">Personalizar Simulación (Opcional)</h3>
+                    <Sparkles className="w-4 h-4 text-indigo-500" />
+                    <h3 className="font-display font-bold text-slate-900 text-xs uppercase tracking-wider">Generador por Tema de Repaso</h3>
                   </div>
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Añade un toque único para el tutor de IA. Ej: <em>"El paciente es un atleta olímpico"</em> o <em>"Agrega síntomas hepáticos"</em>.
+                    Personaliza y genera tu propio caso clínico eligiendo un bloque académico e indicando el subtema o concepto molecular exacto que quieres evaluar.
                   </p>
-                  <textarea
-                    value={customPrompt}
-                    onChange={(e) => setCustomPrompt(e.target.value)}
-                    maxLength={150}
-                    placeholder="Escribe aquí los detalles que desees incluir en el caso..."
-                    className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none h-20 bg-slate-50 text-slate-700 font-medium placeholder-slate-400"
-                  />
-                  <div className="text-right text-[9px] text-slate-400 font-semibold font-mono">
-                    {customPrompt.length}/150 CARACTERES
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">1. Bloque de la Asignatura</label>
+                    <select
+                      value={selectedBlockId}
+                      onChange={(e) => setSelectedBlockId(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer"
+                    >
+                      {THEMES.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          Bloque {t.number}: {t.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">2. Subtema o Concepto Específico (Opcional)</label>
+                    <textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      maxLength={150}
+                      placeholder="Ej. Ciclo de Krebs, Enlaces peptídicos, Mutación posicional, Regulación enzimática..."
+                      className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none h-20 bg-slate-50 text-slate-700 font-medium placeholder-slate-400 transition-all"
+                    />
+                    <div className="text-right text-[9px] text-slate-400 font-semibold font-mono">
+                      {customPrompt.length}/150 CARACTERES
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const theme = THEMES.find(t => t.id === selectedBlockId);
+                      if (theme) {
+                        handleSelectTheme(theme);
+                      }
+                    }}
+                    disabled={loading}
+                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Generando Caso...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Generar Caso Clínico 🧬
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
 
