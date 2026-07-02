@@ -880,6 +880,71 @@ export default function App() {
                       );
                     })}
                   </div>
+
+                  {/* Feedback Panel (Appears immediately below the answer options) */}
+                  <AnimatePresence>
+                    {isQuestionAnswered && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="bg-slate-50 rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col gap-4 mt-5"
+                      >
+                        {userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex ? (
+                          <div className="flex items-center gap-2 text-emerald-600">
+                            <CheckCircle2 className="w-5 h-5 shrink-0" />
+                            <h4 className="font-display font-bold text-xs uppercase tracking-wider">¡Excelente deducción molecular, colega!</h4>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-rose-500">
+                            <XCircle className="w-5 h-5 shrink-0" />
+                            <h4 className="font-display font-bold text-xs uppercase tracking-wider">Análisis y Fisiopatología del Error</h4>
+                          </div>
+                        )}
+
+                        <div className="text-xs text-slate-600 leading-relaxed font-medium">
+                          {userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex ? (
+                            clinicalCase.questions[currentQuestionIdx].correctExplanation
+                          ) : (
+                            clinicalCase.questions[currentQuestionIdx].incorrectExplanation
+                          )}
+                        </div>
+
+                        {/* Support material link - Always highly visible and helpful */}
+                        <div className={`p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex
+                            ? "bg-emerald-50/70 border border-emerald-100 text-emerald-950"
+                            : "bg-rose-50/70 border border-rose-100 text-rose-950"
+                        }`}>
+                          <div className="space-y-0.5">
+                            <span className={`font-bold text-[11px] block font-mono uppercase tracking-wider ${
+                              userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex
+                                ? "text-emerald-800"
+                                : "text-rose-800"
+                            }`}>Material de Apoyo Oficial:</span>
+                            <span className={`text-[11px] font-medium ${
+                              userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex
+                                ? "text-emerald-700"
+                                : "text-rose-700"
+                            }`}>Revisa esta fuente oficial recomendada para profundizar:</span>
+                          </div>
+                          <a
+                            href={clinicalCase.questions[currentQuestionIdx].repassLinkUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`shrink-0 border text-[10px] font-bold uppercase tracking-wider py-2 px-3.5 rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-1 ${
+                              userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex
+                                ? "bg-white hover:bg-emerald-100 border-emerald-200 text-emerald-700"
+                                : "bg-white hover:bg-rose-100 border-rose-200 text-rose-700"
+                            }`}
+                          >
+                            {clinicalCase.questions[currentQuestionIdx].repassLinkLabel}
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Submitting Actions */}
@@ -969,57 +1034,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Card 4: Animated Tutor Feedback Speech Bubble (Span 8) */}
-              <div className="col-span-12 lg:col-span-8">
-                <AnimatePresence>
-                  {isQuestionAnswered && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col gap-4 mt-2"
-                    >
-                      {userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex ? (
-                        <div className="flex items-center gap-2 text-emerald-600">
-                          <CheckCircle2 className="w-5 h-5 shrink-0" />
-                          <h4 className="font-display font-bold text-xs uppercase tracking-wider">¡Excelente deducción molecular, colega!</h4>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-rose-500">
-                          <XCircle className="w-5 h-5 shrink-0" />
-                          <h4 className="font-display font-bold text-xs uppercase tracking-wider">Análisis y Fisiopatología del Error</h4>
-                        </div>
-                      )}
 
-                      <div className="text-xs text-slate-600 leading-relaxed font-medium">
-                        {userAnswers[currentQuestionIdx] === clinicalCase.questions[currentQuestionIdx].correctIndex ? (
-                          clinicalCase.questions[currentQuestionIdx].correctExplanation
-                        ) : (
-                          <>
-                            {clinicalCase.questions[currentQuestionIdx].incorrectExplanation}
-                            
-                            <div className="mt-4 p-4 rounded-xl bg-rose-50/50 border border-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-rose-950">
-                              <div>
-                                <span className="font-bold text-[11px] block font-mono uppercase tracking-wider text-rose-800">Material de Apoyo Académico:</span>
-                                <span className="text-[11px] text-rose-700 font-medium">Revisa esta fuente internacional para consolidar el fundamento:</span>
-                              </div>
-                              <a
-                                href={clinicalCase.questions[currentQuestionIdx].repassLinkUrl}
-                                target="_blank"
-                                  rel="noopener noreferrer"
-                                className="shrink-0 bg-white hover:bg-rose-100 border border-rose-200 text-rose-700 text-[10px] font-bold uppercase tracking-wider py-2 px-3.5 rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-1"
-                              >
-                                {clinicalCase.questions[currentQuestionIdx].repassLinkLabel}
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
 
             </motion.div>
           )}
