@@ -188,7 +188,17 @@ export function SmartLink({ href, label, fallbackTerm, className, useWikipediaFa
                    .replace(/\[?tema_relevante\]?/g, encodeURIComponent(term))
                    .replace(/[\[\]]/g, "");
     }
-    
+
+    // Remapea buscadores oficiales cuyo dominio/ruta dejaron de existir, conservando el término buscado
+    if (clean.includes("find.medlineplus.gov")) {
+      const q = clean.match(/[?&]query=([^&]+)/)?.[1] || encodeURIComponent(term);
+      clean = `https://vsearch.nlm.nih.gov/vivisimo/cgi-bin/query-meta?query=${q}&v%3Aproject=medlineplus-spanish`;
+    }
+    if (clean.includes("who.int/es/home/search")) {
+      const q = clean.match(/[?&]searchText=([^&]+)/)?.[1] || encodeURIComponent(term);
+      clean = `https://www.who.int/search?query=${q}`;
+    }
+
     const forbidden = ["pubmed", "ncbi.nlm.nih.gov", "researchgate", "elsevier", "springer"];
     const isForbidden = forbidden.some(domain => clean.toLowerCase().includes(domain));
     
@@ -798,6 +808,9 @@ export default function App() {
                     <div className="text-right text-[9px] text-slate-400 font-semibold font-mono">
                       {customPrompt.length}/150 CARACTERES
                     </div>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                      Este subtema se aplicará al bloque que elijas, ya sea con el botón de abajo o al hacer clic en una de las tarjetas de la derecha.
+                    </p>
                   </div>
 
                   <button
@@ -841,7 +854,7 @@ export default function App() {
                       <motion.div
                         key={theme.id}
                         whileHover={{ y: -3, scale: 1.01 }}
-                        onClick={() => handleSelectTheme(theme)}
+                        onClick={() => { setSelectedBlockId(theme.id); handleSelectTheme(theme); }}
                         className={`group cursor-pointer bg-white p-5 rounded-2xl border border-slate-200/80 transition-all shadow-xs flex flex-col justify-between gap-4 ${colorStyles.hover}`}
                       >
                         <div className="flex items-start justify-between">
@@ -882,6 +895,16 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               className="flex-grow grid grid-cols-12 gap-4 items-start"
             >
+              {/* Fallback-mode notice: informa que el caso es de la biblioteca local, no generado por IA */}
+              {isFallbackMode && (
+                <div className="col-span-12 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <Lightbulb className="w-4.5 h-4.5 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                    <strong>Modo respaldo:</strong> este es un caso de nuestra biblioteca académica revisada (no generado por IA en este momento). El subtema específico que escribiste no se aplica a los casos de respaldo. Para casos dinámicos personalizados, conecta la clave de Gemini.
+                  </p>
+                </div>
+              )}
+
               {/* Card 1: Active Topic & Status (Span 4) */}
               <div className="col-span-12 lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col justify-between h-full min-h-[220px]">
                 <div>
@@ -1042,7 +1065,15 @@ export default function App() {
 
                 <div className="mt-4 pt-3 border-t border-emerald-200/50 flex items-center justify-between text-[10px] text-emerald-700 font-mono font-bold">
                   <span>RECURSOS: HARPER & LEHNINGER BIOQUÍMICA</span>
-                  <span className="underline cursor-pointer">Ver fuentes online</span>
+                  <a
+                    href={`https://vsearch.nlm.nih.gov/vivisimo/cgi-bin/query-meta?query=${encodeURIComponent(selectedTheme.name)}&v%3Aproject=medlineplus-spanish`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline cursor-pointer hover:text-emerald-900 inline-flex items-center gap-0.5"
+                  >
+                    Ver fuentes online
+                    <ExternalLink className="w-3 h-3 inline-block" />
+                  </a>
                 </div>
               </div>
 
